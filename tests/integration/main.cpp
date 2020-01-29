@@ -21,14 +21,23 @@ boost::unit_test::test_suite* init_unit_test_suite(int argc, char* argv[]) {
    // Turn off blockchain logging if no --verbose parameter is not added
    // To have verbose enabled, call "tests/chain_test -- --verbose"
    bool is_verbose = false;
+   bool extra_verbose = false;
+
    std::string verbose_arg = "--verbose";
+   std::string extra_verbose_arg = "--extra-verbose";
+
    for (int i = 0; i < argc; i++) {
       if (verbose_arg == argv[i]) {
          is_verbose = true;
          break;
       }
+      if (extra_verbose_arg == argv[i]) {
+         extra_verbose = true;
+         break;
+      }
    }
    if(!is_verbose) fc::logger::get(DEFAULT_LOGGER).set_log_level(fc::log_level::off);
+   if(extra_verbose) fc::logger::get(DEFAULT_LOGGER).set_log_level(fc::log_level::all);
 
    // Register fc::exception translator
    boost::unit_test::unit_test_monitor.template register_exception_translator<fc::exception>(&translate_fc_exception);
