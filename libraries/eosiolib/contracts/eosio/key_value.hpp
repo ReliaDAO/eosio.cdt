@@ -448,6 +448,7 @@ public:
 
          bool operator==(const iterator& b) const {
             auto cmp = internal_use_do_not_use::kv_it_compare(itr, b.itr);
+            eosio::print_f("cmp: %\n", cmp);
             return cmp == 0;
          }
 
@@ -594,7 +595,7 @@ public:
       }
 
       /**
-       * Returns an iterator pointing to the element with the highest key less than or equal to the given key.
+       * Returns an iterator pointing to the first element greater than the given key.
        * @ingroup keyvalue
        *
        * @return An iterator pointing to the element with the highest key less than or equal to the given key.
@@ -609,12 +610,8 @@ public:
          iterator it{contract_name, itr, static_cast<kv_it_stat>(itr_stat), this};
 
          auto cmp = internal_use_do_not_use::kv_it_key_compare(it.itr, t_key.data(), t_key.size());
-         while(cmp > 0) {
-            if (it == begin()) {
-               return end();
-            }
-            --it;
-            cmp = internal_use_do_not_use::kv_it_key_compare(it.itr, t_key.data(), t_key.size());
+         if (cmp == 0) {
+            ++it;
          }
 
          return it;
@@ -657,12 +654,15 @@ public:
        * @return A vector containing all the objects that fall between the range.
        */
       template <typename K>
-      std::vector<T> range(K&& begin, K&& end) {
-         auto begin_itr = lower_bound(std::forward<K>(begin));
-         auto end_itr = upper_bound(std::forward<K>(end));
+      std::vector<T> range(K&& b, K&& e) {
+         auto begin_itr = lower_bound(std::forward<K>(b));
+         auto end_itr = upper_bound(std::forward<K>(e));
 
-         bool include_last = find(end) != end_itr;
+         if (end_itr != end()) {
+            --end_itr;
+         }
 
+         
          if (begin_itr == end_itr || begin_itr > end_itr) {
             return {};
          }
@@ -673,10 +673,6 @@ public:
          while(itr != end_itr) {
             return_values.push_back(itr.value());
             ++itr;
-         }
-
-         if (include_last) {
-            return_values.push_back(itr.value());
          }
 
          return return_values;
